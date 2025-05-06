@@ -5,6 +5,8 @@ dotenv.config();
 
 interface Env {
   DISCORD_BOT_TOKEN: string;
+  DISCORD_CLIENT_ID: string;
+  DISCORD_GUILD_ID: string;
 }
 
 /**
@@ -14,6 +16,8 @@ interface Env {
 function validateEnv(): Env {
   return cleanEnv(process.env, {
     DISCORD_BOT_TOKEN: str(),
+    DISCORD_CLIENT_ID: str(),
+    DISCORD_GUILD_ID: str(),
   });
 }
 
