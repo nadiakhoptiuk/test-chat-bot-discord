@@ -38,6 +38,7 @@ To obtain these values:
 
 ### Development
 
+To use Bot at first you need to deploy commands.
 Start the bot in development mode:
 
 ```
@@ -50,6 +51,10 @@ This command uses ts-node to run the TypeScript code directly without compiling 
 
 Register slash commands with Discord:
 
+```
+npm run deploy-commands
+```
+or
 ```
 npx ts-node deploy-commands.ts
 ```
