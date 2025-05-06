@@ -1,13 +1,13 @@
-import { ActionRowBuilder, ButtonBuilder, Events, Interaction } from "discord.js";
+import { Events, Interaction } from "discord.js";
 import { ClientWithCommands } from "../../config/client";
 import { commandsTableEmbed } from "../embeds/commandsTable";
-import { botStatus } from "../buttons/botStatus";
+import { pokemonOptions } from "../commands/choosePokemon";
 
 export default {
   name: Events.InteractionCreate,
   once: false,
   execute: async (interaction: Interaction) => {
-    if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
+    if (!interaction.isChatInputCommand() && !interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
     
     // Button Interaction
@@ -46,5 +46,22 @@ export default {
         }
       }
     }
-   } 
+
+
+    // String Select Menu
+    if (interaction.isStringSelectMenu()) {
+      const id = interaction.customId;
+
+      switch (id) {
+        case 'pokemonSelection':
+          // Convert values to labels using the map
+          const pokemonLabels = interaction.values.map(value => 
+            pokemonOptions.find(option => option.value === value)?.label || value // Fallback to value if label not found
+          ).join(', ');
+          
+          await interaction.reply({ content: `You selected ${pokemonLabels}. Great choice!` });
+          break;
+      }
+    } 
+  }
 };
