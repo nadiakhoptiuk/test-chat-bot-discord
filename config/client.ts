@@ -19,7 +19,9 @@ export function getClientWithCommands(): ClientWithCommands {
         GatewayIntentBits.Guilds, 
         GatewayIntentBits.GuildMessages, 
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildIntegrations
+        GatewayIntentBits.GuildIntegrations,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildPresences
       ] 
     }) as ClientWithCommands;
 
