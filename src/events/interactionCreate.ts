@@ -1,13 +1,14 @@
-import { Events, Interaction } from "discord.js";
+import { EmbedBuilder, Events, Interaction } from "discord.js";
 import { ClientWithCommands } from "../../config/client";
 import { commandsTableEmbed } from "../embeds/commandsTable";
 import { pokemonOptions } from "../commands/choosePokemon";
+import { feedbackEmbed } from "../embeds/feedbackBlock";
 
 export default {
   name: Events.InteractionCreate,
   once: false,
   execute: async (interaction: Interaction) => {
-    if (!interaction.isChatInputCommand() && !interaction.isButton() && !interaction.isStringSelectMenu()) return;
+    if (!interaction.isChatInputCommand() && !interaction.isButton() && !interaction.isStringSelectMenu() && !interaction.isModalSubmit()) return;
 
     
     // Button Interaction
@@ -63,5 +64,31 @@ export default {
           break;
       }
     } 
+
+
+    // Modal Interaction
+    if (interaction.isModalSubmit()) {
+      const modalId = interaction.customId;
+      
+      switch (modalId) {
+        case 'feedbackModal':
+          const feedback = interaction.fields.getTextInputValue('feedbackInput');
+          const points = interaction.fields.getTextInputValue('pointsInput');
+          
+          // Check if points is a valid number between 1-5
+          const pointsNumber = parseInt(points);
+          if (isNaN(pointsNumber) || pointsNumber < 1 || pointsNumber > 5) {
+            await interaction.reply({ content: '❌ Please enter a valid number for points (from 1 to 5).' });
+            return;
+          }
+          
+          // Create a feedback embed using the imported function
+          await interaction.reply({ 
+            embeds: [feedbackEmbed(pointsNumber, feedback)],
+          });
+          break;
+      }
+    }
   }
 };
+
