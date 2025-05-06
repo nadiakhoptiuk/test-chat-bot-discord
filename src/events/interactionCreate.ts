@@ -1,7 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, Events, Interaction } from "discord.js";
+import { Events, Interaction } from "discord.js";
 import { ClientWithCommands } from "../../config/client";
 import { commandsTableEmbed } from "../embeds/commandsTable";
-import { botStatus } from "../buttons/botStatus";
+import { pokemonOptions } from "../commands/choosePokemon";
 
 export default {
   name: Events.InteractionCreate,
@@ -54,7 +54,12 @@ export default {
 
       switch (id) {
         case 'pokemonSelection':
-          await interaction.reply({ content: `You selected ${interaction.values[0]}. Great choice!` });
+          // Convert values to labels using the map
+          const pokemonLabels = interaction.values.map(value => 
+            pokemonOptions.find(option => option.value === value)?.label || value // Fallback to value if label not found
+          ).join(', ');
+          
+          await interaction.reply({ content: `You selected ${pokemonLabels}. Great choice!` });
           break;
       }
     } 
