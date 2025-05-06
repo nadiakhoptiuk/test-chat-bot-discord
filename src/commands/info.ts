@@ -6,6 +6,6 @@ export default {
     .setDescription('Replies with info about the bot'),
 
   execute: async (interaction: ChatInputCommandInteraction) => {
-      await interaction.reply('Bot is active and ready to use! Feel free to use the /ping command to check if the bot is online.');
+      await interaction.reply(`Bot ${interaction.client.user?.username} is ${interaction.client.user?.presence?.status} and ready to use! Feel free to use the /ping command to check if the bot is online.`);
   },
 };

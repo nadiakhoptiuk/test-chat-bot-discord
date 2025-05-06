@@ -1,5 +1,5 @@
 import { REST, Routes } from "discord.js";
-import { commands } from "./src/commands";
+import { commands } from "./src/generateCommands";
 import validateEnv from "./config/envValidation";
 
 const env = validateEnv();
