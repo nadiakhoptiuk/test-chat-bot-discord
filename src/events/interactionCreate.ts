@@ -7,7 +7,7 @@ export default {
   name: Events.InteractionCreate,
   once: false,
   execute: async (interaction: Interaction) => {
-    if (!interaction.isChatInputCommand() && !interaction.isButton()) return;
+    if (!interaction.isChatInputCommand() && !interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
     
     // Button Interaction
@@ -46,5 +46,17 @@ export default {
         }
       }
     }
-   } 
+
+
+    // String Select Menu
+    if (interaction.isStringSelectMenu()) {
+      const id = interaction.customId;
+
+      switch (id) {
+        case 'pokemonSelection':
+          await interaction.reply({ content: `You selected ${interaction.values[0]}. Great choice!` });
+          break;
+      }
+    } 
+  }
 };
