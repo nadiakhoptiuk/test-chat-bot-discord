@@ -1,4 +1,5 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { botStatus, commandsTable } from "../buttons";
 
 export default {
   data: new SlashCommandBuilder()
@@ -6,6 +7,12 @@ export default {
     .setDescription('Replies with info about the bot'),
 
   execute: async (interaction: ChatInputCommandInteraction) => {
-      await interaction.reply(`Bot ${interaction.client.user?.username} is ${interaction.client.user?.presence?.status} and ready to use! Feel free to use the /ping command to check if the bot is online.`);
+    const row = new ActionRowBuilder<ButtonBuilder>()
+			.addComponents(botStatus, commandsTable);
+
+    await interaction.reply({
+      content: 'What question are you interested in? Click the appropriate button below:',
+      components: [row]
+    });
   },
 };
