@@ -1,10 +1,9 @@
-import { initializeClient, connectClient } from "./config/client";
-import validateEnv from "./config/envValidation";
+import validateEnv from './config/envValidation';
+import { BotManager } from './src/bot/botManager';
 
-const env = validateEnv();
+const env = validateEnv(); // { bots: [{clientId, token}, ...], guildId }
 
-// Initialize the Discord client and set up event listeners
-initializeClient();
-
-// Connect to Discord using the token from environment variables
-connectClient(env.DISCORD_BOT_TOKEN);
+const botManager = new BotManager(env.bots.map(bot => ({
+  token: bot.token,
+  id: bot.clientId
+})));
