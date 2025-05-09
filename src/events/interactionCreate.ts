@@ -1,4 +1,4 @@
-import { EmbedBuilder, Events, Interaction } from "discord.js";
+import { Events, Interaction } from "discord.js";
 import { ClientWithCommands } from "../../config/client";
 import { commandsTableEmbed } from "../embeds/commandsTable";
 import { pokemonOptions } from "../commands/choosePokemon";
