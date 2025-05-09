@@ -10,13 +10,22 @@ const rest = new REST().setToken(env.DISCORD_BOT_TOKEN);
 	try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-		// The put method is used to fully refresh all commands in the guild with the current set
-		const data = await rest.put(
+		// Register commands for guild (server) - faster for development
+		const guildCommands = await rest.put(
 			Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID, env.DISCORD_GUILD_ID),
 			{ body: commands },
 		) as any[];
 
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+		console.log(`Successfully reloaded ${guildCommands.length} guild application (/) commands.`);
+
+		// Register global commands (works in DMs) - takes up to 1 hour to propagate
+		const globalCommands = await rest.put(
+			Routes.applicationCommands(env.DISCORD_CLIENT_ID),
+			{ body: commands },
+		) as any[];
+
+		console.log(`Successfully registered ${globalCommands.length} global application (/) commands.`);
+		console.log('Global commands may take up to an hour to propagate to all servers and DMs.');
 	} catch (error) {
 		// And of course, make sure you catch and log any errors!
 		console.error(error);
