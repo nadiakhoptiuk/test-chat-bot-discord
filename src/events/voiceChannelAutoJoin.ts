@@ -1,7 +1,7 @@
-import { joinVoiceChannel, getVoiceConnection } from "@discordjs/voice";
+import { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import { Events, VoiceBasedChannel, VoiceState } from "discord.js";
 import { env } from "process";
-import { recorderRegister } from "../recording/recorder";
+import { recorderRegister } from "../recorder/recorder";
 
 export default {
   name: Events.VoiceStateUpdate,
@@ -37,7 +37,7 @@ async function processChannel(channel: VoiceBasedChannel | null) {
   
   // Count how many non-bot members are in the channel
   const humanCount = channel.members.filter(m => !m.user.bot).size;
-  console.log(`ℹ️  Channel ${channel.name} has ${humanCount} human members`);
+  // console.log(`ℹ️  Channel ${channel.name} has ${humanCount} human members`);
   
   // Get current connection for this guild
   const existingConnection = getVoiceConnection(channel.guild.id);
@@ -55,15 +55,28 @@ async function processChannel(channel: VoiceBasedChannel | null) {
         selfDeaf: false,
       });
 
+      connection.on(VoiceConnectionStatus.Ready, () => {
+        console.log('✅ Bot successfully connected to the voice channel');
+        channel.send('✅ Bot successfully connected');
+      });
+
+      connection.on(VoiceConnectionStatus.Disconnected, (oldState, newState) => {
+        console.log('❌ Lost connection');
+        channel.send('❌ Bot disconnected');
+      });
+
+      connection.on('error', (error) => {
+        console.error('🎯 Connection error:');
+      });
+
       const sessionId = new Date().toISOString().replace(/[:.]/g, '-');
 
-      recorderRegister(connection, sessionId, channel.guild);
+      recorderRegister(connection, sessionId, channel.guild, channel);
       console.log(`🤖➡️  Joined voice channel: ${channel.name}`);
     }
   } else {
     // Leave this channel if no humans and we're connected to it
     if (existingConnection && existingConnection.joinConfig.channelId === channel.id) {
-      console.log(`⏳ Leaving empty channel ${channel.name}...`);
       existingConnection.destroy();
       console.log(`⬅️🤖 Left voice channel: ${channel.name} (no members left)`);
     }
