@@ -1,28 +1,29 @@
 import { AudioReceiveStream, EndBehaviorType } from "@discordjs/voice";
 import { VoiceConnection } from "@discordjs/voice";
-import { Guild } from "discord.js";
+import { Guild, VoiceBasedChannel } from "discord.js";
 import path from "path";
 import fs from "fs";
 import prism from "prism-media";
-import { convertPCMToMP3 } from "./convertAudio";
 import { createMetaFile, updateMetaFile } from "./createOrUpdateMeta";
+import ffmpegPath from "ffmpeg-static";
+import { spawn } from "child_process";
 
 const activeStreams = new Map<string, AudioReceiveStream>();
 
-export const recorderRegister = async (connection: VoiceConnection, sessionId: string, guild: Guild) => {
+export const recorderRegister = async (connection: VoiceConnection, sessionId: string, guild: Guild, channel: VoiceBasedChannel ) => {
   connection.receiver.speaking.on('start', async (userId) => {
-    console.log('START SPEAKING >>> activeStreams:', activeStreams.size)
-    console.log(`🎙️ User ${userId} is speaking`);
+    // console.log('START SPEAKING >>> activeStreams:', activeStreams.size)
+    // console.log(`🎙️ User ${userId} is speaking`);
 
-     if (activeStreams.has(userId)) {
-      // Stream exists
+    // Stream for this user already exists
+    if (activeStreams.has(userId)) {
       return;
     }
 
     const audioStream = connection.receiver.subscribe(userId, {
       end: {
         behavior: EndBehaviorType.AfterSilence,
-        duration: 1000,
+        duration: 5000, // 5 seconds trigger audioStream.on('end',....
       },
     });
 
@@ -35,9 +36,11 @@ export const recorderRegister = async (connection: VoiceConnection, sessionId: s
 
     const startTime = new Date();
     const outputBase = `${userId}-${Date.now()}`;
-    const outputPath = path.join(recordingsDir, `${outputBase}.pcm`);
+
     const jsonPath = path.join(recordingsDir, `${outputBase}.json`);
-    const writeStream = fs.createWriteStream(outputPath);
+    const mp3Path = path.join(recordingsDir, `${outputBase}.mp3`);
+
+    const mp3Stream = fs.createWriteStream(mp3Path);
 
     // Optional: decode Opus -> PCM
     const decoder = new prism.opus.Decoder({
@@ -46,7 +49,23 @@ export const recorderRegister = async (connection: VoiceConnection, sessionId: s
       frameSize: 960,
     });
 
-    // Get username through guild.members.fetch
+    const ffmpeg = spawn(ffmpegPath!, [
+      '-f', 's16le',       // input format = PCM
+      '-ar', '48000',      // sample rate
+      '-ac', '2',          // channels
+      '-i', 'pipe:0',      // input from stdin
+      '-f', 'mp3',         // output format = mp3
+      '-acodec', 'libmp3lame', // encoder
+      '-b:a', '128k',      // bitrate
+      'pipe:1'             // output to stdout
+    ]);
+
+    audioStream.pipe(decoder).pipe(ffmpeg.stdin);
+
+    // Write mp3 immediately to file
+    ffmpeg.stdout.pipe(mp3Stream);
+
+     // Get username through guild.members.fetch
     let username: string = '';
     try {
       const member = await guild.members.fetch(userId);
@@ -67,19 +86,19 @@ export const recorderRegister = async (connection: VoiceConnection, sessionId: s
       jsonPath
     });
 
-    audioStream.pipe(decoder).pipe(writeStream);
-
     audioStream.on('end', () => {
-      console.log(`📁 Finished recording: ${outputPath}`);
+      console.log(`📁 Finished recording: ${mp3Path} for user ${username}`);
       activeStreams.delete(userId);
-      const mp3Path = outputPath.replace(/\.pcm$/, '.mp3');
-
+      
       // Update JSON-file with end recording time
       updateMetaFile({
         jsonPath,
         endRecordingTime: new Date()
       });
-      convertPCMToMP3(outputPath, mp3Path, jsonPath);
+    });
+
+    audioStream.on('error', (err) => {
+      channel.send(`⚠️ Error recording for <@${userId}>: ${err.message}`);
     });
   });
 }
